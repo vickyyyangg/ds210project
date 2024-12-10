@@ -124,3 +124,53 @@ fn calculate_linear_regression(x: &[f64], y: &[f64]) -> (f64, f64, f64, f64) {
 
     (slope, intercept, correlation, r_squared)
 }
+
+fn perform_salary_correlation_analysis(individuals: &[Individual]) -> Result<(), Box<dyn Error>> {
+    let analyses = vec![
+        ("Salary vs Age",
+         individuals.iter().map(|ind| ind.age).collect::<Vec<f64>>(),
+         individuals.iter().map(|ind| ind.salary).collect::<Vec<f64>>()),
+
+        ("Salary vs Years of Experience",
+         individuals.iter().map(|ind| ind.years_of_experience).collect::<Vec<f64>>(),
+         individuals.iter().map(|ind| ind.salary).collect::<Vec<f64>>()),
+
+        ("Salary vs Job Satisfaction",
+         individuals.iter().map(|ind| ind.job_satisfaction).collect::<Vec<f64>>(),
+         individuals.iter().map(|ind| ind.salary).collect::<Vec<f64>>()),
+
+        ("Salary vs Professional Network Size",
+         individuals.iter().map(|ind| ind.professional_network_size).collect::<Vec<f64>>(),
+         individuals.iter().map(|ind| ind.salary).collect::<Vec<f64>>()),
+
+        ("Salary vs Family Influence",
+         individuals.iter().map(|ind| ind.family_influence).collect::<Vec<f64>>(),
+         individuals.iter().map(|ind| ind.salary).collect::<Vec<f64>>()),
+
+        ("Salary vs Likelihood to Change Occupation",
+         individuals.iter().map(|ind| ind.likelihood_to_change_occupation).collect::<Vec<f64>>(),
+         individuals.iter().map(|ind| ind.salary).collect::<Vec<f64>>()),
+    ];
+
+    println!("\n--- Salary Correlation Analyses ---");
+    
+    for (title, x, y) in analyses {
+        let (slope, intercept, correlation, r_squared) = 
+            calculate_linear_regression(&x, &y);
+
+        println!("\n{}:", title);
+        println!("Correlation Coefficient: {:.4}", correlation);
+        println!("Regression Equation: Salary = {:.4} * X + {:.4}", slope, intercept);
+        println!("R-squared: {:.4}", r_squared);
+
+        if correlation.abs() < 0.3 {
+            println!("Weak correlation");
+        } else if correlation.abs() < 0.7 {
+            println!("Moderate correlation");
+        } else {
+            println!("Strong correlation");
+        }
+    }
+
+    Ok(())
+}
