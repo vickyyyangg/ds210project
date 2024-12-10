@@ -11,7 +11,7 @@ struct Individual {
     years_of_experience: f64,
     job_satisfaction: f64,
     professional_network_size: f64,
-    family_influence: f64, // Ordinal encoding: Low → 1, Medium → 2, High → 3
+    family_influence: f64, 
     salary: f64,
     likelihood_to_change_occupation: f64,
 }
@@ -19,7 +19,7 @@ struct Individual {
 fn read_dataset(file_path: &str) -> Result<Vec<Individual>, Box<dyn Error>> {
     let mut individuals = Vec::new();
     let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(true) // Ensure headers are skipped
+        .has_headers(true) 
         .from_path(file_path)?;
 
     let max_records = 20_000;
@@ -32,7 +32,6 @@ fn read_dataset(file_path: &str) -> Result<Vec<Individual>, Box<dyn Error>> {
 
         let record = result?;
 
-        // Debug: Print record to verify
         if record.len() < 23 {
             println!("Short record at index {}: {:?}", i, record);
             parse_errors += 1;
@@ -102,7 +101,7 @@ fn calculate_linear_regression(x: &[f64], y: &[f64]) -> (f64, f64, f64, f64) {
         cov_xy += (x[i] - mean_x) * (y[i] - mean_y);
     }
 
-    var_x /= n - 1.0; // Fix variance calculation
+    var_x /= n - 1.0; 
 
     let slope = cov_xy / (var_x * (n - 1.0));
     let intercept = mean_y - slope * mean_x;
@@ -173,4 +172,44 @@ fn perform_salary_correlation_analysis(individuals: &[Individual]) -> Result<(),
     }
 
     Ok(())
+}
+
+fn print_sample_verification(sample: &[Individual]) {
+    println!("\n--- Random Sample Verification ---");
+    println!("Total records in sample: {}", sample.len());
+
+    let ages: Vec<f64> = sample.iter().map(|ind| ind.age).collect();
+    let experiences: Vec<f64> = sample.iter().map(|ind| ind.years_of_experience).collect();
+    let salaries: Vec<f64> = sample.iter().map(|ind| ind.salary).collect();
+    
+    println!("\nAge Distribution:");
+    print_stats(&ages);
+
+    println!("\nYears of Experience Distribution:");
+    print_stats(&experiences);
+
+    println!("\nSalary Distribution:");
+    print_stats(&salaries);
+
+    println!("\nFamily Influence Distribution:");
+    let family_influence_counts: Vec<f64> = vec![
+        sample.iter().filter(|ind| ind.family_influence == 0.0).count() as f64,
+        sample.iter().filter(|ind| ind.family_influence == 1.0).count() as f64,
+        sample.iter().filter(|ind| ind.family_influence == 2.0).count() as f64,
+        sample.iter().filter(|ind| ind.family_influence == 3.0).count() as f64,
+    ];
+    println!("None: {:.2}%", family_influence_counts[0] / sample.len() as f64 * 100.0);
+    println!("Low: {:.2}%", family_influence_counts[1] / sample.len() as f64 * 100.0);
+    println!("Medium: {:.2}%", family_influence_counts[2] / sample.len() as f64 * 100.0);
+    println!("High: {:.2}%", family_influence_counts[3] / sample.len() as f64 * 100.0);
+
+    println!("\nFirst 10 Records (Original IDs):");
+    for ind in sample.iter().take(10) {
+        println!("ID: {}, Age: {}, Salary: {}", ind.id, ind.age, ind.salary);
+    }
+
+    println!("\nLast 10 Records (Original IDs):");
+    for ind in sample.iter().rev().take(10) {
+        println!("ID: {}, Age: {}, Salary: {}", ind.id, ind.age, ind.salary);
+    }
 }
