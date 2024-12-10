@@ -244,3 +244,145 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    // Test linear regression with a simple known dataset
+    #[test]
+    fn test_calculate_linear_regression() {
+        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
+        
+        let (slope, intercept, correlation, r_squared) = 
+            calculate_linear_regression(&x, &y);
+
+        assert!((slope - 2.0).abs() < 1e-6, "Slope should be 2");
+        assert!((intercept - 0.0).abs() < 1e-6, "Intercept should be 0");
+        assert!((correlation - 1.0).abs() < 1e-6, "Correlation should be 1");
+        assert!((r_squared - 1.0).abs() < 1e-6, "R-squared should be 1");
+    }
+
+    // Test error handling in linear regression
+    #[test]
+    #[should_panic(expected = "Input vectors must be of equal length")]
+    fn test_linear_regression_different_lengths() {
+        let x = vec![1.0, 2.0, 3.0];
+        let y = vec![1.0, 2.0, 3.0, 4.0];
+        
+        calculate_linear_regression(&x, &y);
+    }
+
+    // Test Individual struct creation
+    #[test]
+    fn test_individual_creation() {
+        let individual = Individual {
+            id: 1,
+            age: 30.0,
+            years_of_experience: 5.0,
+            job_satisfaction: 4.5,
+            professional_network_size: 100.0,
+            family_influence: 2.0,
+            salary: 75000.0,
+            likelihood_to_change_occupation: 0.3,
+        };
+
+        assert_eq!(individual.id, 1);
+        assert_eq!(individual.age, 30.0);
+        assert_eq!(individual.family_influence, 2.0);
+    }
+
+    // Test family influence parsing
+    #[test]
+    fn test_family_influence_parsing() {
+        let test_cases = vec![
+            ("None", 0.0),
+            ("Low", 1.0),
+            ("Medium", 2.0),
+            ("High", 3.0),
+        ];
+
+        for (input, expected) in test_cases {
+            let result = match input {
+                "None" => 0.0,
+                "Low" => 1.0,
+                "Medium" => 2.0,
+                "High" => 3.0,
+                _ => f64::NAN,
+            };
+            assert_eq!(result, expected);
+        }
+    }
+
+    // Test reading a small CSV dataset
+    #[test]
+    fn test_read_small_dataset() {
+        let csv_data = 
+"Age,Experience,Job Satisfaction,Network Size,Family Influence,Salary,Likelihood to Change
+30,5,4.5,100,Medium,75000,0.3
+35,10,4.8,200,High,85000,0.2
+25,2,3.9,50,Low,60000,0.5";
+
+        let cursor = Cursor::new(csv_data.as_bytes());
+        
+        let mut rdr = csv::ReaderBuilder::new()
+            .has_headers(true)
+            .from_reader(cursor);
+
+        let individuals: Vec<Individual> = rdr
+            .records()
+            .enumerate()
+            .filter_map(|(i, result)| {
+                let record = result.ok()?;
+                
+                let age = record.get(0)?.trim().parse::<f64>().ok()?;
+                let years_of_experience = record.get(1)?.trim().parse::<f64>().ok()?;
+                let job_satisfaction = record.get(2)?.trim().parse::<f64>().ok()?;
+                let professional_network_size = record.get(3)?.trim().parse::<f64>().ok()?;
+                
+                let family_influence = match record.get(4)?.trim() {
+                    "None" => Some(0.0),
+                    "Low" => Some(1.0),
+                    "Medium" => Some(2.0),
+                    "High" => Some(3.0),
+                    _ => None,
+                }?;
+                
+                let salary = record.get(5)?.trim().parse::<f64>().ok()?;
+                let likelihood_to_change_occupation = record.get(6)?.trim().parse::<f64>().ok()?;
+
+                Some(Individual {
+                    id: i,
+                    age,
+                    years_of_experience,
+                    job_satisfaction,
+                    professional_network_size,
+                    family_influence,
+                    salary,
+                    likelihood_to_change_occupation,
+                })
+            })
+            .collect();
+
+        assert_eq!(individuals.len(), 3, "Should parse 3 records");
+        assert_eq!(individuals[0].age, 30.0);
+        assert_eq!(individuals[1].salary, 85000.0);
+        assert_eq!(individuals[2].family_influence, 1.0);
+    }
+
+    // Test print_stats function
+    #[test]
+    fn test_print_stats() {
+        let test_data = vec![10.0, 20.0, 30.0, 40.0, 50.0];
+        
+        let mean = test_data.iter().sum::<f64>() / test_data.len() as f64;
+        let min = test_data.iter().cloned().fold(f64::INFINITY, |a, b| a.min(b));
+        let max = test_data.iter().cloned().fold(f64::NEG_INFINITY, |a, b| a.max(b));
+        
+        assert!((mean - 30.0).abs() < 1e-6, "Mean should be 30");
+        assert!((min - 10.0).abs() < 1e-6, "Min should be 10");
+        assert!((max - 50.0).abs() < 1e-6, "Max should be 50");
+    }
+}
