@@ -213,3 +213,13 @@ fn print_sample_verification(sample: &[Individual]) {
         println!("ID: {}, Age: {}, Salary: {}", ind.id, ind.age, ind.salary);
     }
 }
+
+fn print_stats(data: &[f64]) {
+    let mean = data.iter().sum::<f64>() / data.len() as f64;
+    let min = data.iter().cloned().fold(f64::INFINITY, |a, b| a.min(b));
+    let max = data.iter().cloned().fold(f64::NEG_INFINITY, |a, b| a.max(b));
+    
+    println!("Mean: {:.2}", mean);
+    println!("Min: {:.2}", min);
+    println!("Max: {:.2}", max);
+}
