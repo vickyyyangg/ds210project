@@ -223,3 +223,24 @@ fn print_stats(data: &[f64]) {
     println!("Min: {:.2}", min);
     println!("Max: {:.2}", max);
 }
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let file_path = "career_dataset.csv";
+    let mut individuals = read_dataset(file_path)?;
+
+    if individuals.is_empty() {
+        eprintln!("No individuals loaded from the dataset!");
+        return Ok(());
+    }
+
+    let mut rng = thread_rng();
+    individuals.shuffle(&mut rng);
+
+    let final_sample: Vec<Individual> = individuals.into_iter().take(2_000).collect();
+
+    print_sample_verification(&final_sample);
+
+    perform_salary_correlation_analysis(&final_sample)?;
+
+    Ok(())
+}
