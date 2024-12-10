@@ -86,3 +86,41 @@ fn read_dataset(file_path: &str) -> Result<Vec<Individual>, Box<dyn Error>> {
     println!("Total parse errors: {}", parse_errors);
     Ok(individuals)
 }
+
+fn calculate_linear_regression(x: &[f64], y: &[f64]) -> (f64, f64, f64, f64) {
+    assert_eq!(x.len(), y.len(), "Input vectors must be of equal length");
+    let n = x.len() as f64;
+
+    let mean_x: f64 = x.iter().sum::<f64>() / n;
+    let mean_y: f64 = y.iter().sum::<f64>() / n;
+
+    let mut var_x = 0.0;
+    let mut cov_xy = 0.0;
+
+    for i in 0..x.len() {
+        var_x += (x[i] - mean_x).powi(2);
+        cov_xy += (x[i] - mean_x) * (y[i] - mean_y);
+    }
+
+    var_x /= n - 1.0; // Fix variance calculation
+
+    let slope = cov_xy / (var_x * (n - 1.0));
+    let intercept = mean_y - slope * mean_x;
+
+    let mut r_numerator = 0.0;
+    let mut r_denomx = 0.0;
+    let mut r_denomy = 0.0;
+
+    for i in 0..x.len() {
+        let dx = x[i] - mean_x;
+        let dy = y[i] - mean_y;
+        r_numerator += dx * dy;
+        r_denomx += dx.powi(2);
+        r_denomy += dy.powi(2);
+    }
+
+    let correlation = r_numerator / (r_denomx * r_denomy).sqrt();
+    let r_squared = correlation.powi(2);
+
+    (slope, intercept, correlation, r_squared)
+}
